@@ -110,11 +110,7 @@ def angle_oi(sfc_tilt, sfc_azimuth, slr_altitude, slr_azimuth):
     return math.degrees(angle)
 
 
-def get_utc_offset(lat, long):
-    r = requests.get(
-        "https://atlas.microsoft.com/timezone/byCoordinates/json?api-version=1.0&subscription-key"
-        f"=ftSsz1bBFYcRrjGUUl9WkmERZHc-6rpmTrxaPRIWG4Q&query={str(lat)},{str(long)}")
-    return int(r.json().get('TimeZones')[0].get('ReferenceTime').get('StandardOffset').split(":")[0])
+
 
 
 # def calc_irradiance(input_dat, lat, aoi):

@@ -108,3 +108,10 @@ def format_address(i):
         address += i['address']['postalCode']
         address += " "
     return address
+
+@app.get("/getUTC&q={lat},{long}")
+def get_utc_offset(lat : float, long: float):
+    r = requests.get(
+        "https://atlas.microsoft.com/timezone/byCoordinates/json?api-version=1.0&subscription-key"
+        f"=ftSsz1bBFYcRrjGUUl9WkmERZHc-6rpmTrxaPRIWG4Q&query={str(lat)},{str(long)}")
+    return int(r.json().get('TimeZones')[0].get('ReferenceTime').get('StandardOffset').split(":")[0])
