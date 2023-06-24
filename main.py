@@ -5,6 +5,7 @@ import sys
 from fastapi import FastAPI, Request, Query
 from solarcalc import *
 from fastapi.middleware.cors import CORSMiddleware
+
 from urllib.parse import parse_qs, unquote
 
 origins = ["http://localhost:3001"]
@@ -73,7 +74,8 @@ async def irradiance(lat: float, lon: float, year: int, month: int, day: int, ho
 async def search_location(query: str):
     api_key = "ftSsz1bBFYcRrjGUUl9WkmERZHc-6rpmTrxaPRIWG4Q"
     r = requests.get(
-        f"https://atlas.microsoft.com/search/address/json?&subscription-key=ftSsz1bBFYcRrjGUUl9WkmERZHc-6rpmTrxaPRIWG4Q&api-version=1.0&language=en-US&query={query}")
+        f"https://atlas.microsoft.com/search/address/json?&subscription-key=ftSsz1bBFYcRrjGUUl9WkmERZHc"
+        f"-6rpmTrxaPRIWG4Q&api-version=1.0&language=en-US&query={query}")
     obj = r.json()
 
     result = {"result": []}
