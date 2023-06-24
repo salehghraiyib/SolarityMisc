@@ -70,12 +70,13 @@ async def irradiance(lat: float, lon: float, year: int, month: int, day: int, ho
     print("Aoi: ", aoi)
 
 
-@app.get("/locationsearch&q={query}")
-async def search_location(query: str):
+@app.get("/locationsearch")
+async def search_location(location: str = Query(None),):
+    print(location)
     api_key = "ftSsz1bBFYcRrjGUUl9WkmERZHc-6rpmTrxaPRIWG4Q"
     r = requests.get(
         f"https://atlas.microsoft.com/search/address/json?&subscription-key=ftSsz1bBFYcRrjGUUl9WkmERZHc"
-        f"-6rpmTrxaPRIWG4Q&api-version=1.0&language=en-US&query={query}")
+        f"-6rpmTrxaPRIWG4Q&api-version=1.0&language=en-US&query={location}")
     obj = r.json()
 
     result = {"result": []}
