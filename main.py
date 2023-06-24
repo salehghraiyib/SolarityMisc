@@ -2,11 +2,12 @@ import io
 import json
 import sys
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request, Query
 from solarcalc import *
 from fastapi.middleware.cors import CORSMiddleware
+from urllib.parse import parse_qs, unquote
 
-origins = ["http://localhost:3000"]
+origins = ["http://localhost:3001"]
 
 app = FastAPI()
 
@@ -109,9 +110,14 @@ def format_address(i):
         address += " "
     return address
 
-@app.get("/getUTC&q={lat},{long}")
-def get_utc_offset(lat : float, long: float):
+@app.get("/getUTC")
+def get_utc_offset(lat: str = Query(None), lng: str = Query(None)):
+    # Parse the query string
+
     r = requests.get(
         "https://atlas.microsoft.com/timezone/byCoordinates/json?api-version=1.0&subscription-key"
-        f"=ftSsz1bBFYcRrjGUUl9WkmERZHc-6rpmTrxaPRIWG4Q&query={str(lat)},{str(long)}")
+        f"=ftSsz1bBFYcRrjGUUl9WkmERZHc-6rpmTrxaPRIWG4Q&query={str(lat)},{str(lng)}")
     return int(r.json().get('TimeZones')[0].get('ReferenceTime').get('StandardOffset').split(":")[0])
+
+
+#  uvicorn main:app --reload --port 8000
