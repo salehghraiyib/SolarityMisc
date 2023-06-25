@@ -1,7 +1,6 @@
 import datetime
 import math
 from pysolar.solar import *
-import requests
 import json
 
 # Open the ASHRAE Model file
@@ -92,9 +91,6 @@ def surface_azimuth(orientation):
         return 90
 
 
-# def direct_irradiance(tilt, orientaion, solar_azimuth, solar_altitude):
-
-
 def altitude_module(tilt):
     return 90.0 - tilt
 
@@ -108,17 +104,6 @@ def angle_oi(sfc_tilt, sfc_azimuth, slr_altitude, slr_azimuth):
     angle = math.acos(first + second)
 
     return math.degrees(angle)
-
-
-
-
-
-# def calc_irradiance(input_dat, lat, aoi):
-#    vnorm = np.array([0, 0, -1])  # plane pointing zenith
-#    lat = -23.5  # southern hemisphere
-#    h = 0  # sea level
-#    i = irradiance_on_plane(vnorm, h, input_dat, lat)
-#    return i
 
 
 def time_to_decimal(time_str):
@@ -156,7 +141,10 @@ print(direct_beam_radiation_tilted(
     datetime.datetime(day=21, month=3, year=1999, hour=14, minute=15), 28.785, 30))
 
 
-def pv_output(wpeak, area, irr, tc, temp, noct, cloud_cover):
+def pv_output(wpeak, area, irr, tc, temp, noct, cloud_cover, system_loss):
+    if(irr <= 0):
+        return 0
+
     effc = (wpeak / (1000 * area))
     temp_cell = temp + (noct - 20) * (irr / 800)
     print(temp_cell)
@@ -164,7 +152,7 @@ def pv_output(wpeak, area, irr, tc, temp, noct, cloud_cover):
     print(temp_change)
     pr = 1
     h = irr
-    pv = (effc * area * h * pr * temp_change) * cloud_effect(cloud_cover)
+    pv = (effc * area * h * pr * temp_change) * (1-system_loss) * cloud_effect(cloud_cover)
 
     if pv >= wpeak:
         return wpeak
@@ -183,7 +171,42 @@ def cloud_effect(cloud_cover):
     else:
         return 1
 
+def pv(lat: float, lon: float, year: int, month: int, day: int, hour: int, orientation: str,
+       angle: float, utc):
+    print("UTC Offset", utc)
+    date = datetime.datetime(year, month, day, hour)
+    print("Date: ", date)
+    # local solar time
+    ltsm = get_local_standard_meridian(utc)
+    print("Local Standard Meridian: ", ltsm)
+    eot = equation_of_time(date.timetuple().tm_yday)
+    print("Equation Of Time: ", eot)
+    tc = get_time_correction(lon, ltsm, eot)
+    print("Time Correction: ", tc)
+    local_solar_time = get_local_solar_time(tc, date)
+    print("Local Solar Time: ", local_solar_time)
+    hra = get_hra(local_solar_time)
+    print("hour angle: ", hra)
+    declination = get_dec(date)
+    print("Declination: ", declination)
+    solar_altitude = sun_altitude(declination, lat, hra)
+    print("Elevation: ", solar_altitude)
 
+    # check the twilight threshhold
+    if solar_altitude <= -6:
+        return 0
+
+    zenith = solar_zenith(solar_altitude)
+    print("Solar Zenith", zenith)
+    azimuth = get_solar_azimuth(zenith, hra, declination, lat, local_solar_time.hour)
+    print("Azimuth: ", azimuth)
+    aoi = angle_oi(angle, surface_azimuth(orientation), solar_altitude, azimuth)
+    print("Aoi: ", aoi)
+
+    dbrt = direct_beam_radiation_tilted(
+        solar_altitude, datetime.datetime(day=day, month=month, year=year, hour=hour, minute=15), aoi,angle)
+
+    return dbrt
 
 
 
