@@ -138,7 +138,7 @@ async def force_weather(data: QueData):
 
     #update_proj_status(data.idProj)
 
-    return "Done"
+    return 200
 
 
 @app.post("/forcesync")
