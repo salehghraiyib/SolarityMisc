@@ -170,6 +170,12 @@ def start_cal_naturally(project, company_details):
 
             energy_out = pv_output(cprod['peakpower'], cprod['area'], irr, cprod['temp_coff'], weather['temp'],
                                    cprod['nominal_temp'], weather['clouds'], cprod['system_loss'])
+
+            if energy_out <= 0:
+                results.append([datetime.datetime(weather['time'][0], weather['time'][1],
+                                                  weather['time'][2], weather['time'][3], second=0), 0])
+                continue
+
             results.append([datetime.datetime(weather['time'][0], weather['time'][1],
                                               weather['time'][2], weather['time'][3], second=0), energy_out])
 
@@ -193,15 +199,22 @@ def start_cal_force(products, company_details, projId):
             irr = pv(product['lat'], product['lon'], weather['time'][0], weather['time'][1],
                      weather['time'][2], weather['time'][3], product['orientation'], product['tilt'], product['utc'])
 
+            print("irradiance: ", irr)
             cprod = company_details[str(product['company_product_id'])]
             energy_out = pv_output(cprod['peakpower'], cprod['area'], irr, cprod['temp_coff'], weather['temp'],
                                    cprod['nominal_temp'], weather['clouds'], cprod['system_loss'])
+
+            if energy_out <= 0:
+                results.append([datetime.datetime(weather['time'][0], weather['time'][1],
+                                                  weather['time'][2], weather['time'][3], second=0), 0])
+                continue
+
             results.append([datetime.datetime(weather['time'][0], weather['time'][1],
                                               weather['time'][2], weather['time'][3], second=0), energy_out])
 
         results = group_final_data(results)
         print(results)
-        query = f'INSERT INTO pv_energy (product_id,project_id,date,pvoutput ) VALUES (%s,%s,%s,%s)'
+        query = f'INSERT INTO pv_energy (product_id,project_id,date,pvoutput) VALUES (%s,%s,%s,%s)'
         for i in results:
             cursor.execute(query, (
                 product['field_product_id'],

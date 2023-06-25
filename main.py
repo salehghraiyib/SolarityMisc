@@ -9,7 +9,7 @@ from solarcalc import *
 from fastapi.middleware.cors import CORSMiddleware
 from weather_cron import *
 
-origins = ["http://localhost:3000"]
+origins = ["*"]
 
 app = FastAPI()
 
@@ -136,7 +136,7 @@ async def force_weather(data: QueData):
     cprods = get_company_products()
     start_cal_force(products, cprods, data.idProj)
 
-    update_proj_status(data.idProj)
+    #update_proj_status(data.idProj)
 
     return "Done"
 

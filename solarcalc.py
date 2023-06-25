@@ -146,13 +146,18 @@ def pv_output(wpeak, area, irr, tc, temp, noct, cloud_cover, system_loss):
         return 0
 
     effc = (wpeak / (1000 * area))
+    print(effc)
     temp_cell = temp + (noct - 20) * (irr / 800)
     print(temp_cell)
     temp_change = (100 + (tc * (temp_cell - 25))) / 100
     print(temp_change)
+    print(noct)
+    print(system_loss)
     pr = 1
     h = irr
     pv = (effc * area * h * pr * temp_change) * (1-system_loss) * cloud_effect(cloud_cover)
+    print(pv)
+
 
     if pv >= wpeak:
         return wpeak
