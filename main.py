@@ -1,10 +1,12 @@
 import threading
 from datetime import timedelta
-
-from fastapi import FastAPI
+import io
+import json
+import sys
+from fastapi import FastAPI, Request, Query
+from urllib.parse import parse_qs, unquote
 from solarcalc import *
 from fastapi.middleware.cors import CORSMiddleware
-from misc import *
 from weather_cron import *
 
 origins = ["http://localhost:3000"]
@@ -33,12 +35,13 @@ async def root():
     return {"message": "Hello World"}
 
 
-@app.get("/locationsearch&q={query}")
-async def search_location(query: str):
+@app.get("/locationsearch")
+async def search_location(location: str = Query(None),):
+    print(location)
     api_key = "ftSsz1bBFYcRrjGUUl9WkmERZHc-6rpmTrxaPRIWG4Q"
     r = requests.get(
         f"https://atlas.microsoft.com/search/address/json?&subscription-key=ftSsz1bBFYcRrjGUUl9WkmERZHc"
-        f"-6rpmTrxaPRIWG4Q&api-version=1.0&language=en-US&query={query}")
+        f"-6rpmTrxaPRIWG4Q&api-version=1.0&language=en-US&query={location}")
     obj = r.json()
 
     result = {"result": []}
@@ -76,11 +79,13 @@ def format_address(i):
     return address
 
 
-@app.get("/getUTC&q={lat},{long}")
-def get_utc_offset(lat: float, long: float):
+@app.get("/getUTC")
+def get_utc_offset(lat: str = Query(None), lng: str = Query(None)):
+    # Parse the query string
+
     r = requests.get(
         "https://atlas.microsoft.com/timezone/byCoordinates/json?api-version=1.0&subscription-key"
-        f"=ftSsz1bBFYcRrjGUUl9WkmERZHc-6rpmTrxaPRIWG4Q&query={str(lat)},{str(long)}")
+        f"=ftSsz1bBFYcRrjGUUl9WkmERZHc-6rpmTrxaPRIWG4Q&query={str(lat)},{str(lng)}")
     return int(r.json().get('TimeZones')[0].get('ReferenceTime').get('StandardOffset').split(":")[0])
 
 
@@ -129,7 +134,7 @@ async def force_weather(data: QueData):
             product['weather_data'] += get_weather_data(product['lat'], product['lon'], d)
 
     cprods = get_company_products()
-    # start_cal_force(products, cprods, data.idProj)
+    start_cal_force(products, cprods, data.idProj)
 
     update_proj_status(data.idProj)
 
