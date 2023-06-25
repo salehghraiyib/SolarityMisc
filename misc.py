@@ -177,7 +177,7 @@ def start_cal_naturally(project, company_details):
                 continue
 
             results.append([datetime.datetime(weather['time'][0], weather['time'][1],
-                                              weather['time'][2], weather['time'][3], second=0), energy_out])
+                                              weather['time'][2], weather['time'][3], second=0), float(energy_out/1000)])
 
         results = group_final_data(results)
         print(results)
@@ -210,7 +210,7 @@ def start_cal_force(products, company_details, projId):
                 continue
 
             results.append([datetime.datetime(weather['time'][0], weather['time'][1],
-                                              weather['time'][2], weather['time'][3], second=0), energy_out])
+                                              weather['time'][2], weather['time'][3], second=0), float(energy_out/1000)])
 
         results = group_final_data(results)
         print(results)
