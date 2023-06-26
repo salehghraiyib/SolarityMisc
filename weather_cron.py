@@ -62,6 +62,7 @@ def cronwork():
         return
 
     yesterday = datetime.datetime.now() - datetime.timedelta(days=1)
+    # TODO check if yesterday exists from sync job
     cursor = db.cursor()
     for project in projects:
         for product in project['products']:
@@ -82,7 +83,7 @@ def cronwork():
                 query = f'INSERT INTO weather_data (date_time,project_id,product_id, temp, clouds ) VALUES (%s,%s,%s,%s,%s)'
 
                 cursor.execute(query, (
-                    yesterday.replace(hour=weather_data['time'][3], minute=0, second=0), project['project_id'],
+                    datetime.datetime(yesterday.year, yesterday.month, yesterday.day, weather_data['time'][3], seconds=0, microsecond=5), project['project_id'],
                     product['field_product_id'], weather_data['temp'], weather_data['clouds']))
                 db.commit()
                 # Commit the changes to the database

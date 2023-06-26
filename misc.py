@@ -50,7 +50,7 @@ def get_dates_between(start_date, end_date):
     dates = []
     current_date = start_date
 
-    while current_date <= end_date:
+    while current_date < end_date:
         dates.append(current_date)
         current_date += datetime.timedelta(days=1)
 
@@ -61,11 +61,11 @@ def get_products(pid):
     cursor = db.cursor()
     sub_query = f'SELECT field_product_id, lat,lon,utc_offset,tilt,orientation,company_product_id FROM field_product WHERE project_id="{pid}"'
     cursor.execute(sub_query)
-    products = cursor.fetchall()
+    products = list(cursor.fetchall())
     cursor.close()
     if len(products) == 0:
         return []
-    return products
+    return [[elem for elem in row] for row in products]
 
 
 def get_open_projects():
@@ -87,7 +87,7 @@ def get_open_projects_by_id(uID):
     cursor.close()
     if len(rows) == 0:
         return []
-    return rows
+    return [list(row) for row in rows] if cursor.rowcount > 1 else [[elem for elem in row] for row in rows]
 
 
 def get_dates_from_weather_data(pid):
@@ -108,7 +108,8 @@ def get_dates_from_weather_data(pid):
 
 def get_already_existent_weather_data(prodId, projId, startDate):
     cursor = db.cursor()
-    query = f"SELECT date_time, temp, clouds FROM weather_data WHERE project_id = '{projId}' AND product_id= '{prodId}' ORDER BY date_time ASC WHERE date_time >= {startDate};"
+    formatted_date = startDate.strftime("%Y-%m-%d")
+    query = f"SELECT date_time, temp, clouds FROM weather_data WHERE project_id = '{projId}' AND product_id= '{prodId}' AND date_time >= '{formatted_date}' ORDER BY date_time ASC;"
     cursor.execute(query)
     rows = cursor.fetchall()
     cursor.close()
@@ -159,8 +160,33 @@ def get_weather_data(lat, lon, d):
 def start_cal_naturally(project, company_details):
     cursor = db.cursor()
 
+    today = datetime.datetime.now().date()
+    # Calculate the date of yesterday
+    daybefore = today - datetime.timedelta(days=2)
+
+    dates_between = get_dates_between(project['start'].date(), daybefore)
+
+    dates_already = get_dates_from_weather_data(project['project_id'])
+
+    dates_to_retrieve = []
+
+    found = 0
+    firstdate = None
+    for i in dates_between:
+        if i not in dates_already:
+            dates_to_retrieve.append(i)
+        elif i in dates_already:
+            if (found == 0):
+                firstdate = i
+                found = found + 1
+            else:
+                if i < firstdate:
+                    firstdate = i
+
+    fill_weather_gap(project['products'], dates_to_retrieve, project['project_id'])
+
     for product in project['products']:
-        wdta = get_already_existent_weather_data(product['field_product_id'], project['project_id'])
+        wdta = get_already_existent_weather_data(product['field_product_id'], project['project_id'], firstdate)
         results = []
         for weather in wdta:
             irr = pv(product['lat'], product['lon'], weather['time'][0], weather['time'][1],
@@ -177,7 +203,7 @@ def start_cal_naturally(project, company_details):
                 continue
 
             results.append([datetime.datetime(weather['time'][0], weather['time'][1],
-                                              weather['time'][2], weather['time'][3], second=0), energy_out/1000.0])
+                                              weather['time'][2], weather['time'][3], second=0), energy_out / 1000.0])
 
         results = group_final_data(results)
         print(results)
@@ -210,7 +236,7 @@ def start_cal_force(products, company_details, projId):
                 continue
 
             results.append([datetime.datetime(weather['time'][0], weather['time'][1],
-                                              weather['time'][2], weather['time'][3], second=0), energy_out/1000])
+                                              weather['time'][2], weather['time'][3], second=0), energy_out / 1000])
 
         results = group_final_data(results)
         print(results)
@@ -222,6 +248,35 @@ def start_cal_force(products, company_details, projId):
             db.commit()
 
     cursor.close()
+
+
+def fill_weather_gap(parray, darray, projId):
+    cursor = db.cursor()
+    for product in parray:
+        for d in darray:
+            weather = get_weather_data_one_day(product['lat'], product['lon'], d)
+
+            for w in weather:
+                time = w['dt']
+
+                weather_data = {
+                    "time": unix_to_normal_time(time),
+                    "lon": product['lon'],
+                    "lat": product['lat'],
+                    "temp": w['main']['temp'],
+                    "clouds": w['clouds']['all'],
+                }
+
+                query = f'INSERT INTO weather_data (date_time,project_id,product_id, temp, clouds ) VALUES (%s,%s,%s,%s,%s)'
+
+                cursor.execute(query, (
+                    datetime.datetime(d.year, d.month, d.day, weather_data['time'][3], microsecond=5), projId,
+                    product['field_product_id'], weather_data['temp'], weather_data['clouds']))
+                db.commit()
+                # Commit the changes to the database
+
+        db.commit()
+        cursor.close()
 
 
 def group_final_data(input):
@@ -260,6 +315,7 @@ def get_projects_id(uID):
     rows = get_open_projects_by_id(uID)
 
     # Process the rows
+    print(rows)
     for project in rows:
 
         print(project)
@@ -280,6 +336,8 @@ def get_projects_id(uID):
 
         # check if yesterday already exists - forced sync by the user
         dates_already = get_dates_from_weather_data(obj['project_id'])
+
+        print(yesterday.date())
 
         products = get_products(obj['project_id'])
 
@@ -325,5 +383,3 @@ class QueData(BaseModel):
 
 class user(BaseModel):
     userID: int
-
-
