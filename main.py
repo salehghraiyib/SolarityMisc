@@ -89,8 +89,8 @@ def get_utc_offset(lat: str = Query(None), lng: str = Query(None)):
     return int(r.json().get('TimeZones')[0].get('ReferenceTime').get('StandardOffset').split(":")[0])
 
 
-@app.post("/forceweather")
-async def force_weather(data: QueData):
+@app.post("/startcalc")
+async def startcalc(data: QueData):
     products = []
     # Get today's date
     today = datetime.datetime.now().date()
@@ -105,6 +105,7 @@ async def force_weather(data: QueData):
     dates_between = get_dates_between(target_start, yesterday)
 
     dates_already = get_dates_from_weather_data(data.idProj)
+
     dates_to_retrieve = []
 
     for i in dates_between:
@@ -128,15 +129,14 @@ async def force_weather(data: QueData):
     print(dates_already)
 
     for product in products:
-        product['weather_data'] = get_already_existent_weather_data(product['field_product_id'], data.idProj)
+        if(len(dates_already) > 0):
+            product['weather_data'] = get_already_existent_weather_data(product['field_product_id'], data.idProj, dates_already[0])
 
         for d in dates_to_retrieve:
             product['weather_data'] += get_weather_data(product['lat'], product['lon'], d)
 
     cprods = get_company_products()
     start_cal_force(products, cprods, data.idProj)
-
-    #update_proj_status(data.idProj)
 
     return 200
 

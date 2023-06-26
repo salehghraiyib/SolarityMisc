@@ -106,9 +106,9 @@ def get_dates_from_weather_data(pid):
     return unique_dates
 
 
-def get_already_existent_weather_data(prodId, projId):
+def get_already_existent_weather_data(prodId, projId, startDate):
     cursor = db.cursor()
-    query = f"SELECT date_time, temp, clouds FROM weather_data WHERE project_id = '{projId}' AND product_id= '{prodId}' ORDER BY date_time ASC;"
+    query = f"SELECT date_time, temp, clouds FROM weather_data WHERE project_id = '{projId}' AND product_id= '{prodId}' ORDER BY date_time ASC WHERE date_time >= {startDate};"
     cursor.execute(query)
     rows = cursor.fetchall()
     cursor.close()
