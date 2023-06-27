@@ -146,5 +146,3 @@ def weather_cleanup():
         cursor.execute(query)
         db.commit()
         cursor.close()
-
-cronwork()
