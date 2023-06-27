@@ -49,8 +49,7 @@ def get_open_products_list():
         if abs(time_difference) >= project[1]:
             calc_projects.append(obj)
 
-        print(projects)
-        return [projects, calc_projects]
+    return [projects, calc_projects]
 
 
 def cronwork():
@@ -110,7 +109,7 @@ def cronwork():
 
 def run_schedule():
     # Schedule the insert_row function to run every night at 10 PM
-    schedule.every().day.at("23:00:00").do(cronwork)
+    schedule.every().day.at("17:51:10").do(cronwork)
     # TODO change the time of the cron job
     while True:
         schedule.run_pending()

@@ -167,7 +167,7 @@ async def force_sync(data: user):
         for project in projects:
             dates_already = get_dates_from_weather_data(project['project_id'])
             print(dates_already)
-            if (yesterday not in dates_already):
+            if (yesterday not in dates_already) or len(dates_already) == 0:
                 for product in project['products']:
                     weather = get_weather_data_one_day(product['lat'], product['lon'],
                                                        yesterday)

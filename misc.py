@@ -61,11 +61,11 @@ def get_products(pid):
     cursor = db.cursor()
     sub_query = f'SELECT field_product_id, lat,lon,utc_offset,tilt,orientation,company_product_id FROM field_product WHERE project_id="{pid}"'
     cursor.execute(sub_query)
-    products = list(cursor.fetchall())
+    products = cursor.fetchall()
     cursor.close()
     if len(products) == 0:
         return []
-    return [[elem for elem in row] for row in products]
+    return products
 
 
 def get_open_projects():
@@ -337,8 +337,6 @@ def get_projects_id(uID):
         # check if yesterday already exists - forced sync by the user
         dates_already = get_dates_from_weather_data(obj['project_id'])
 
-        print(yesterday.date())
-
         products = get_products(obj['project_id'])
 
         for item in products:
@@ -358,7 +356,7 @@ def get_projects_id(uID):
         if abs(time_difference) >= project[1]:
             calc_projects.append(obj)
 
-        return [projects, calc_projects]
+    return [projects, calc_projects]
 
 
 class Date(BaseModel):
