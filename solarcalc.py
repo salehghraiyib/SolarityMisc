@@ -1,7 +1,9 @@
 import datetime
 import math
-from pysolar.solar import *
 import json
+import sys
+
+from pysolar.solar import get_declination, equation_of_time
 
 # Open the ASHRAE Model file
 with open('ASHRAE.json', 'r') as file:
@@ -114,7 +116,18 @@ def time_to_decimal(time_str):
 
 def direct_beam_radiation(alpha, date):
     month = date.strftime("%B")
-    i_bn = ashrae[month]['A'] / math.exp((ashrae[month]['B']) / math.sin(math.radians(alpha)))
+    x = (ashrae[month]['B']) / math.sin(math.radians(alpha))
+    max_exp_arg = math.log(sys.float_info.max)  # Maximum value for safe exponential calculation
+    min_exp_arg = math.log(sys.float_info.min)  # Minimum value for safe exponential calculation
+
+    # Check if the value is within a safe range for exponential calculation
+    if x > max_exp_arg:
+        result = math.exp(max_exp_arg)
+    elif x < min_exp_arg:
+        result = math.exp(min_exp_arg)
+    else:
+        result = math.exp(x)
+    i_bn = ashrae[month]['A'] / result
     return i_bn
 
 

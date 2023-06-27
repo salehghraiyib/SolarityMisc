@@ -36,7 +36,7 @@ async def root():
 
 
 @app.get("/locationsearch")
-async def search_location(location: str = Query(None),):
+async def search_location(location: str = Query(None), ):
     print(location)
     api_key = "ftSsz1bBFYcRrjGUUl9WkmERZHc-6rpmTrxaPRIWG4Q"
     r = requests.get(
@@ -114,13 +114,12 @@ async def startcalc(data: QueData):
         if i not in dates_already:
             dates_to_retrieve.append(i)
         elif i in dates_already:
-            if(found == 0):
+            if (found == 0):
                 firstdate = i
                 found = found + 1
             else:
                 if i < firstdate:
                     firstdate = i
-
 
     print(firstdate)
 
@@ -138,16 +137,14 @@ async def startcalc(data: QueData):
             "weather_data": []
         })
 
-    print(products_db)
-
     print(dates_to_retrieve)
     print(dates_already)
     print(firstdate)
-    print(products)
 
     for product in products:
-        if(len(dates_already) > 0):
-            product['weather_data'] = get_already_existent_weather_data(product['field_product_id'], data.idProj, firstdate)
+        if (len(dates_already) > 0):
+            product['weather_data'] = get_already_existent_weather_data(product['field_product_id'], data.idProj,
+                                                                        firstdate)
 
         for d in dates_to_retrieve:
             product['weather_data'] += get_weather_data(product['lat'], product['lon'], d)
@@ -160,21 +157,20 @@ async def startcalc(data: QueData):
 
 @app.post("/forcesync")
 async def force_sync(data: user):
-
     stat = get_projects_id(data.userID)
     projects = stat[0]
     calc_projects = stat[1]
     print(projects)
-    yesterday = datetime.datetime.now() - datetime.timedelta(days=1)
+    yesterday = datetime.datetime.now().date() - datetime.timedelta(days=1)
     cursor = db.cursor()
     if len(projects) > 0:
         for project in projects:
             dates_already = get_dates_from_weather_data(project['project_id'])
             print(dates_already)
-            if(yesterday.date() not in dates_already):
+            if (yesterday not in dates_already):
                 for product in project['products']:
                     weather = get_weather_data_one_day(product['lat'], product['lon'],
-                                                datetime.datetime.now() - datetime.timedelta(days=1))
+                                                       yesterday)
 
                     for w in weather:
                         time = w['dt']
@@ -190,7 +186,8 @@ async def force_sync(data: user):
                         query = f'INSERT INTO weather_data (date_time,project_id,product_id, temp, clouds ) VALUES (%s,%s,%s,%s,%s)'
 
                         cursor.execute(query, (
-                            yesterday.replace(hour=weather_data['time'][3], minute=0, second=0, microsecond=5), project['project_id'],
+                            datetime.datetime(yesterday.year, yesterday.month, yesterday.day, hour=weather_data['time'][3], minute=0, second=0, microsecond=5),
+                            project['project_id'],
                             product['field_product_id'], weather_data['temp'], weather_data['clouds']))
                         db.commit()
 
@@ -204,30 +201,23 @@ async def force_sync(data: user):
             update_proj_status(project['project_id'])
             start_cal_naturally(project, company_products)
 
-    print(projects)
     # check for missing weather data since start
     for project in projects:
         today = datetime.datetime.now().date()
         # Calculate the date of yesterday
-        daybefore = today - datetime.timedelta(days=2)
+        daybefore = today - datetime.timedelta(days=1)
         dates_already = get_dates_from_weather_data(project['project_id'])
         dates_between = get_dates_between(project['start'].date(), daybefore)
 
-        dates_to_retrieve = []
+        print(" ----------  ")
 
-        found = 0
-        firstdate = None
-        for i in dates_between:
-            if i not in dates_already:
-                dates_to_retrieve.append(i)
-            elif i in dates_already:
-                if (found == 0):
-                    firstdate = i
-                    found = found + 1
-                else:
-                    if i < firstdate:
-                        firstdate = i
-        print(dates_to_retrieve)
-        fill_weather_gap(project['products'], dates_to_retrieve, project['project_id'])
+        date_list_set = set(dates_between)
+
+        # Find the missing dates
+        missing_dates = [d for d in dates_between if d not in dates_already]
+
+        print(missing_dates)
+
+        fill_weather_gap(project['products'], missing_dates, project['project_id'])
 
     return "Done"
