@@ -64,27 +64,30 @@ def cronwork():
 
     cursor = db.cursor()
     for project in projects:
-        for product in project['products']:
-            weather = get_weather_data_one_day(product['lat'], product['lon'],
-                                               datetime.datetime.now() - datetime.timedelta(days=1))
+        dates_already = get_dates_from_weather_data(project['project_id'])
 
-            for w in weather:
-                time = w['dt']
+        if (yesterday.date() not in dates_already) or len(dates_already) == 0:
+            for product in project['products']:
+                weather = get_weather_data_one_day(product['lat'], product['lon'],
+                                                datetime.datetime.now() - datetime.timedelta(days=1))
 
-                weather_data = {
-                    "time": unix_to_normal_time(time),
-                    "lon": product['lon'],
-                    "lat": product['lat'],
-                    "temp": w['main']['temp'],
-                    "clouds": w['clouds']['all'],
-                }
+                for w in weather:
+                    time = w['dt']
 
-                query = f'INSERT INTO weather_data (date_time,project_id,product_id, temp, clouds ) VALUES (%s,%s,%s,%s,%s)'
+                    weather_data = {
+                        "time": unix_to_normal_time(time),
+                        "lon": product['lon'],
+                        "lat": product['lat'],
+                        "temp": w['main']['temp'],
+                        "clouds": w['clouds']['all'],
+                    }
 
-                cursor.execute(query, (
-                    datetime.datetime(yesterday.year, yesterday.month, yesterday.day, weather_data['time'][3], second=0, microsecond=5), project['project_id'],
-                    product['field_product_id'], weather_data['temp'], weather_data['clouds']))
-                db.commit()
+                    query = f'INSERT INTO weather_data (date_time,project_id,product_id, temp, clouds ) VALUES (%s,%s,%s,%s,%s)'
+
+                    cursor.execute(query, (
+                        datetime.datetime(yesterday.year, yesterday.month, yesterday.day, weather_data['time'][3], second=0, microsecond=5), project['project_id'],
+                        product['field_product_id'], weather_data['temp'], weather_data['clouds']))
+                    db.commit()
                 # Commit the changes to the database
 
     db.commit()
@@ -109,7 +112,7 @@ def cronwork():
 
 def run_schedule():
     # Schedule the insert_row function to run every night at 10 PM
-    schedule.every().day.at("20:36:00").do(cronwork)
+    schedule.every().day.at("21:34:00").do(cronwork)
     # TODO change the time of the cron job
     while True:
         schedule.run_pending()
@@ -143,3 +146,5 @@ def weather_cleanup():
         cursor.execute(query)
         db.commit()
         cursor.close()
+
+cronwork()

@@ -170,20 +170,26 @@ def start_cal_naturally(project, company_details):
 
     dates_to_retrieve = []
 
-    found = 0
-    firstdate = None
+
     for i in dates_between:
         if i not in dates_already:
             dates_to_retrieve.append(i)
-        elif i in dates_already:
+
+
+    fill_weather_gap(project['products'], dates_to_retrieve, project['project_id'])
+
+    dates_already = get_dates_from_weather_data(project['project_id'])
+
+    found = 0
+    firstdate = None
+    for i in dates_between:
+        if i in dates_already:
             if (found == 0):
                 firstdate = i
                 found = found + 1
             else:
                 if i < firstdate:
                     firstdate = i
-
-    fill_weather_gap(project['products'], dates_to_retrieve, project['project_id'])
 
     for product in project['products']:
         wdta = get_already_existent_weather_data(product['field_product_id'], project['project_id'], firstdate)
