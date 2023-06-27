@@ -62,7 +62,7 @@ def cronwork():
         return
 
     yesterday = datetime.datetime.now() - datetime.timedelta(days=1)
-    # TODO check if yesterday exists from sync job
+
     cursor = db.cursor()
     for project in projects:
         for product in project['products']:
@@ -103,6 +103,7 @@ def cronwork():
         update_proj_status(project['project_id'])
 
     # clean weather data
+    weather_cleanup()
 
     return
 
@@ -136,3 +137,10 @@ def get_company_products():
         res[str(cp[0])] = company_product
 
     return res
+
+def weather_cleanup():
+        cursor = db.cursor()
+        query = f"DELETE FROM weather_data WHERE project_id IN (SELECT idProject FROM projects WHERE status = 2);"
+        cursor.execute(query)
+        db.commit()
+        cursor.close()
