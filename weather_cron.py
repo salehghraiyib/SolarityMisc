@@ -82,7 +82,7 @@ def cronwork():
                 query = f'INSERT INTO weather_data (date_time,project_id,product_id, temp, clouds ) VALUES (%s,%s,%s,%s,%s)'
 
                 cursor.execute(query, (
-                    datetime.datetime(yesterday.year, yesterday.month, yesterday.day, weather_data['time'][3], seconds=0, microsecond=5), project['project_id'],
+                    datetime.datetime(yesterday.year, yesterday.month, yesterday.day, weather_data['time'][3], second=0, microsecond=5), project['project_id'],
                     product['field_product_id'], weather_data['temp'], weather_data['clouds']))
                 db.commit()
                 # Commit the changes to the database
@@ -109,7 +109,7 @@ def cronwork():
 
 def run_schedule():
     # Schedule the insert_row function to run every night at 10 PM
-    schedule.every().day.at("17:51:10").do(cronwork)
+    schedule.every().day.at("20:36:00").do(cronwork)
     # TODO change the time of the cron job
     while True:
         schedule.run_pending()

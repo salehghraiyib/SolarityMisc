@@ -192,7 +192,6 @@ async def force_sync(data: user):
                         db.commit()
 
     cursor.close()
-    print("gggggg")
     company_products = get_company_products()
     print(calc_projects)
     print(projects)
