@@ -199,11 +199,11 @@ def start_cal_naturally(project, company_details):
 
             if energy_out <= 0:
                 results.append([datetime.datetime(weather['time'][0], weather['time'][1],
-                                                  weather['time'][2], weather['time'][3], second=0), 0])
+                                                  weather['time'][2], weather['time'][3], second=0, microsecond=5), 0])
                 continue
 
             results.append([datetime.datetime(weather['time'][0], weather['time'][1],
-                                              weather['time'][2], weather['time'][3], second=0), energy_out / 1000.0])
+                                              weather['time'][2], weather['time'][3], second=0, microsecond=5), energy_out / 1000.0])
 
         results = group_final_data(results)
         print(results)
@@ -232,11 +232,11 @@ def start_cal_force(products, company_details, projId):
 
             if energy_out <= 0:
                 results.append([datetime.datetime(weather['time'][0], weather['time'][1],
-                                                  weather['time'][2], weather['time'][3], second=0), 0])
+                                                  weather['time'][2], weather['time'][3], second=0, microsecond=5), 0])
                 continue
 
             results.append([datetime.datetime(weather['time'][0], weather['time'][1],
-                                              weather['time'][2], weather['time'][3], second=0), energy_out / 1000])
+                                              weather['time'][2], weather['time'][3], second=0, microsecond=5), energy_out / 1000])
 
         results = group_final_data(results)
         print(results)
