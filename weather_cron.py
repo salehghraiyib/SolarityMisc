@@ -112,7 +112,7 @@ def cronwork():
 
 def run_schedule():
     # Schedule the insert_row function to run every night at 10 PM
-    schedule.every().day.at("21:34:00").do(cronwork)
+    schedule.every().day.at("01:00:00").do(cronwork)
     # TODO change the time of the cron job
     while True:
         schedule.run_pending()
